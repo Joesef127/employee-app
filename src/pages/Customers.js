@@ -8,7 +8,7 @@ export default function Customers() {
   const [customers, setCustomers] = useState();
   const [show, setShow] = useState(false);
 
-  function toggleShow () {
+  function toggleShow() {
     setShow(!show);
   }
 
@@ -22,12 +22,12 @@ export default function Customers() {
         });
     } catch (error) {
       console.log('Something went wrong', error.message);
-        return <p>Something went wrong, {error.message}</p>;
+      return <p>Something went wrong, {error.message}</p>;
     }
   }, []);
 
   function newCustomer(name, industry) {
-    const data = {name: name, industry: industry}; 
+    const data = { name: name, industry: industry };
     const url = baseUrl + 'api/customers';
     fetch(url, {
       method: 'POST',
@@ -36,18 +36,18 @@ export default function Customers() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Something went wrong");
+          throw new Error('Something went wrong');
         }
         return response.json();
       })
       .then((data) => {
         toggleShow();
-        console.log(data)
-        setCustomers([...customers, data.customer])
+        console.log(data);
+        setCustomers([...customers, data.customer]);
       })
       .catch((e) => {
-        console.log(e)
-        return <p>Something went wrong</p>
+        console.log(e);
+        return <p>Something went wrong</p>;
       });
   }
 
@@ -56,20 +56,27 @@ export default function Customers() {
       {customers ? (
         <>
           <h1>Here are our customers: </h1>
-          <ul>
-            {customers.map((customer) => {
-              return (
-                <li key={customer.id}>
-                  <Link to={'/customers/' + customer.id}>{customer.name}</Link>
-                </li>
-              );
-            })}
-          </ul>
+
+          {customers.map((customer) => {
+            return (
+              <div key={customer.id}>
+                <Link to={'/customers/' + customer.id}>
+                  <button className="my-1 bg-slate-800 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded">
+                    {customer.name}
+                  </button>
+                </Link>
+              </div>
+            );
+          })}
         </>
       ) : (
         <p>There are no customers</p>
       )}
-      <AddCustomer newCustomer={newCustomer} show={show} toggleShow={toggleShow} />
+      <AddCustomer
+        newCustomer={newCustomer}
+        show={show}
+        toggleShow={toggleShow}
+      />
     </>
   );
 }

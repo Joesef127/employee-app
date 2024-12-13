@@ -40,14 +40,15 @@ export default function Customer() {
         .then((data) => {
           setCustomer(data.Customer);
           setTempCustomer(data.Customer);
-          setError(undefined)
+          setError(undefined);
         });
     } catch (e) {
       setError(e.message);
     }
   }, []);
 
-  function updateCustomer() {
+  function updateCustomer(e) {
+    e.preventDefault();
     const url = baseUrl + 'api/customers/' + id;
     fetch(url, {
       method: 'POST',
@@ -70,50 +71,66 @@ export default function Customer() {
       });
   }
 
-  function compareCustomers() {}
-
   return (
-    <>
+    <div className="p-3">
       {notFound ? <p>Customer with id {id} could not be found</p> : null}
       {customer ? (
-        <ul>
-          <li>
-            <input
-              className="px-2 my-2"
-              type="text"
-              value={tempCustomer.name}
-              onChange={(e) => {
-                setChanged(true);
-                setTempCustomer({ ...tempCustomer, name: e.target.value });
-                compareCustomers();
-              }}
-            />
-          </li>
-          <li>
-            <input
-              className="px-2 my-2"
-              type="text"
-              value={tempCustomer.industry}
-              onChange={(e) => {
-                setChanged(true);
-                setTempCustomer({
-                  ...tempCustomer,
-                  industry: e.target.value,
-                });
-                compareCustomers();
-              }}
-            />
-          </li>
+        <div>
+          <form
+            className="w-full max-w-sm"
+            id="customer"
+            onSubmit={updateCustomer}
+          >
+            <div className="md:flex md:items-center mb-6">
+              <div className="md:w-1/4">
+                <label for="cname">Name: </label>
+              </div>
+              <div className="md:w-3/4">
+                <input
+                  id="cname"
+                  className="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
+                  type="text"
+                  value={tempCustomer.name}
+                  onChange={(e) => {
+                    setChanged(true);
+                    setTempCustomer({ ...tempCustomer, name: e.target.value });
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="md:flex md:items-center mb-6">
+              <div className="md:w-1/4">
+                <label for="cindustry">Industry: </label>
+              </div>
+              <div className="md:w-3/4">
+                <input
+                  id="cindustry"
+                  className="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
+                  type="text"
+                  value={tempCustomer.industry}
+                  onChange={(e) => {
+                    setChanged(true);
+                    setTempCustomer({
+                      ...tempCustomer,
+                      industry: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+            </div>
+          </form>
+
           {changed ? (
             <>
               <button
-                className="my-2 px-2 bg-slate-400 rounded text-white"
-                onClick={updateCustomer}
+                className="my-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+                form="customer"
               >
                 Save
-              </button>{' '}
+              </button>
               <button
-                className="my-2 px-2 bg-slate-400 rounded text-white"
+                className="m-2 bg-slate-400 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded"
                 onClick={(e) => {
                   setTempCustomer({ ...customer });
                   setChanged(false);
@@ -125,7 +142,7 @@ export default function Customer() {
             </>
           ) : null}
           <button
-            className="my-2 px-2 bg-slate-400 rounded text-white"
+            className="bg-slate-800 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded"
             onClick={(e) => {
               const url = baseUrl + 'api/customers/' + id;
               fetch(url, {
@@ -136,7 +153,7 @@ export default function Customer() {
                   if (!response.ok) {
                     throw new Error('Something went wrong');
                   }
-                  setError(undefined)
+                  setError(undefined);
                   navigate('/customers');
                 })
                 .catch((e) => {
@@ -146,10 +163,16 @@ export default function Customer() {
           >
             Delete
           </button>
-        </ul>
+        </div>
       ) : null}
+
       {error ? <p>{error}</p> : null}
-      <Link to={'/customers'}>{'<-'} Go back to customers list</Link>
-    </>
+
+      <Link to={'/customers'}>
+        <button className="no-underline my-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+          {'<-'} Go back
+        </button>
+      </Link>
+    </div>
   );
 }
