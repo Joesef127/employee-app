@@ -8,15 +8,21 @@ export default function Customer() {
   const [tempCustomer, setTempCustomer] = useState();
   const [notFound, setNotFound] = useState(false);
   const [changed, setChanged] = useState(false);
+  const [error, setError] = useState();
 
   const { id } = useParams();
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    // console.log(customer);
-    // console.log(tempCustomer);
-    // console.log(changed);
+    if (!tempCustomer) return;
+    if (!customer) return;
+
+    let equal = true;
+    if (customer.name !== tempCustomer.name) equal = false;
+    if (customer.industry !== tempCustomer.industry) equal = false;
+
+    if (equal) return setChanged(false);
   });
 
   useEffect(() => {
@@ -24,21 +30,22 @@ export default function Customer() {
       const url = baseUrl + 'api/customers/' + id;
       fetch(url)
         .then((response) => {
-          if (response.status === 404) {
-            setNotFound(true);
+          if (response.status === 404) setNotFound(true);
+
+          if (!response.ok) {
+            throw new Error('Something went wrong');
           }
           return response.json();
         })
         .then((data) => {
           setCustomer(data.Customer);
           setTempCustomer(data.Customer);
+          setError(undefined)
         });
-    } catch (error) {console.log(error)}
+    } catch (e) {
+      setError(e.message);
+    }
   }, []);
-
-  function DeleteCustomer() {
-    console.log('deleting...');
-  }
 
   function updateCustomer() {
     const url = baseUrl + 'api/customers/' + id;
@@ -54,14 +61,16 @@ export default function Customer() {
         return response.json();
       })
       .then((data) => {
-        setCustomer(data.customer);
+        setCustomer(data.Customer);
         setChanged(false);
-        console.log(data);
+        setError(undefined);
       })
       .catch((e) => {
-        console.log(e);
+        setError(e.message);
       });
   }
+
+  function compareCustomers() {}
 
   return (
     <>
@@ -76,6 +85,7 @@ export default function Customer() {
               onChange={(e) => {
                 setChanged(true);
                 setTempCustomer({ ...tempCustomer, name: e.target.value });
+                compareCustomers();
               }}
             />
           </li>
@@ -90,6 +100,7 @@ export default function Customer() {
                   ...tempCustomer,
                   industry: e.target.value,
                 });
+                compareCustomers();
               }}
             />
           </li>
@@ -110,32 +121,34 @@ export default function Customer() {
               >
                 cancel
               </button>
+              <br />
             </>
           ) : null}
+          <button
+            className="my-2 px-2 bg-slate-400 rounded text-white"
+            onClick={(e) => {
+              const url = baseUrl + 'api/customers/' + id;
+              fetch(url, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+              })
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error('Something went wrong');
+                  }
+                  setError(undefined)
+                  navigate('/customers');
+                })
+                .catch((e) => {
+                  setError(e.message);
+                });
+            }}
+          >
+            Delete
+          </button>
         </ul>
       ) : null}
-      <button
-        className="my-2 px-2 bg-slate-400 rounded text-white"
-        onClick={(e) => {
-          const url = baseUrl + 'api/customers/' + id;
-          fetch(url, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error('Something went wrong');
-              }
-              navigate('/customers');
-            })
-            .catch((e) => {
-              console.log(e);
-            });
-        }}
-      >
-        Delete
-      </button>
-      <br />
+      {error ? <p>{error}</p> : null}
       <Link to={'/customers'}>{'<-'} Go back to customers list</Link>
     </>
   );
