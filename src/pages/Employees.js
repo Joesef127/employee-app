@@ -66,7 +66,6 @@ function Employees() {
   ]);
 
   function updateEmployee(id, newName, newRole) {
-    console.log("update employees");
     const updatedEmployees = employees.map((employee) => {
       if (id === employee.id) {
         return { ...employee, name: newName, role: newRole };

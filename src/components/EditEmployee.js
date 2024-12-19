@@ -38,8 +38,6 @@ function EditEmployee(props) {
             onSubmit={(e) => {
               handleClose();
               e.preventDefault();
-              console.log("edited employee");
-              console.log(props.id, name, role);
               props.updateEmployee(props.id, name, role);
             }}
             id="editModal"

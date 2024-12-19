@@ -28,8 +28,7 @@ export default function Definition() {
           setWord(data[0].meanings);
         });
     } catch (error) {
-      console.log(error.message);
-      return <p>Error: {error.message}</p>
+      return <p>Error: {error.message}</p>;
     }
   }, []);
 
@@ -54,21 +53,22 @@ export default function Definition() {
     <>
       {word ? (
         <>
+          <h1>Here is a definition: </h1>
           {word.map((meaning) => {
             return (
               <>
-                <h1>Here is a definition: </h1>
                 <p key={uuidv4()}>
                   {meaning.partOfSpeech + ': '}
                   {meaning.definitions[0].definition}
                 </p>
-                <p>Search again: </p>
-                <DefinitionSearch />
               </>
             );
           })}
+          <Link to="/dictionary">search another</Link>
         </>
-      ) : <p>Not available!</p>}
+      ) : (
+        <p>Not available!</p>
+      )}
     </>
   );
 }

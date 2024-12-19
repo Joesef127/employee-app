@@ -6,7 +6,7 @@ export default function Dictionary() {
     <div className="flex justify-center items-center flex-col">
       <DefinitionSearch />
       <div className="my-4">
-        <Definition />
+        {/* <Definition /> */}
       </div>
     </div>
   )

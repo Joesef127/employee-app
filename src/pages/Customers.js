@@ -1,40 +1,66 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useContext, useEffect, useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { baseUrl } from '../shared';
 import AddCustomer from '../components/AddCustomer';
+import { LoginContext } from '../App';
 
 export default function Customers() {
+  const [loggedIn, setLoggedIn] = useContext(LoginContext);
   const [customers, setCustomers] = useState();
   const [show, setShow] = useState(false);
+  const [error, setError] = useState('');
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   function toggleShow() {
     setShow(!show);
   }
 
   useEffect(() => {
-    try {
-      const url = baseUrl + 'api/customers';
-      fetch(url)
-        .then((response) => response.json())
-        .then((data) => {
-          setCustomers(data.Customers);
-        });
-    } catch (error) {
-      console.log('Something went wrong', error.message);
-      return <p>Something went wrong, {error.message}</p>;
-    }
+    const url = baseUrl + 'api/customers/';
+    fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + localStorage.getItem('access'),
+      },
+    })
+      .then((response) => {
+        if (response.status === 401) {
+          setLoggedIn(false)
+          navigate('/login', {
+            state: {
+              previousUrl: location.pathname,
+            },
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setCustomers(data.customers || []);
+      });
   }, []);
 
   function newCustomer(name, industry) {
     const data = { name: name, industry: industry };
-    const url = baseUrl + 'api/customers';
+    const url = baseUrl + 'api/customers/';
     fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer' + localStorage.getItem('access'),
+      },
       body: JSON.stringify(data),
     })
       .then((response) => {
+        if (response.status === 401) {
+          navigate('/login', {
+            state: {
+              previousUrl: location.pathname,
+            },
+          });
+        }
         if (!response.ok) {
           throw new Error('Something went wrong');
         }
@@ -42,17 +68,16 @@ export default function Customers() {
       })
       .then((data) => {
         toggleShow();
-        console.log(data);
-        setCustomers([...customers, data.customer]);
+        setCustomers([...customers, data.customers]);
       })
       .catch((e) => {
-        console.log(e);
-        return <p>Something went wrong</p>;
+        setError(e);
       });
   }
 
   return (
     <>
+      {error ? <p>{error}</p> : null}
       {customers ? (
         <>
           <h1>Here are our customers: </h1>

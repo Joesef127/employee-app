@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState, useContext } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import NotFound from '../components/NotFound';
 import { baseUrl } from '../shared';
+import { LoginContext } from '../App';
 
 export default function Customer() {
+  const [loggedIn, setLoggedIn] = useContext(LoginContext);
   const [customer, setCustomer] = useState();
   const [tempCustomer, setTempCustomer] = useState();
   const [notFound, setNotFound] = useState(false);
@@ -13,6 +15,7 @@ export default function Customer() {
   const { id } = useParams();
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!tempCustomer) return;
@@ -26,25 +29,34 @@ export default function Customer() {
   });
 
   useEffect(() => {
-    try {
-      const url = baseUrl + 'api/customers/' + id;
-      fetch(url)
-        .then((response) => {
-          if (response.status === 404) setNotFound(true);
+    const url = baseUrl + 'api/customers/' + id;
+    fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + localStorage.getItem('access'),
+      },
+    })
+      .then((response) => {
+        if (response.status === 404) setNotFound(true);
+        else if (response.status === 401) {
+          setLoggedIn(false);
+          navigate('/login', {
+            state: {
+              previousUrl: location.pathname,
+            },
+          });
+        }
 
-          if (!response.ok) {
-            throw new Error('Something went wrong');
-          }
-          return response.json();
-        })
-        .then((data) => {
-          setCustomer(data.Customer);
-          setTempCustomer(data.Customer);
-          setError(undefined);
-        });
-    } catch (e) {
-      setError(e.message);
-    }
+        if (!response.ok) {
+          throw new Error('Something went wronger than before');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setCustomer(data.customer);
+        setTempCustomer(data.customer);
+        setError(null);
+      });
   }, []);
 
   function updateCustomer(e) {
@@ -52,17 +64,28 @@ export default function Customer() {
     const url = baseUrl + 'api/customers/' + id;
     fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + localStorage.getItem('access'),
+      },
       body: JSON.stringify(tempCustomer),
     })
       .then((response) => {
+        if (response.status === 401) {
+          setLoggedIn(false);
+          navigate('/login', {
+            state: {
+              previousUrl: location.pathname,
+            },
+          });
+        }
         if (!response.ok) {
           throw new Error('Something went wrong');
         }
         return response.json();
       })
       .then((data) => {
-        setCustomer(data.Customer);
+        setCustomer(data.customer);
         setChanged(false);
         setError(undefined);
       })
@@ -147,11 +170,21 @@ export default function Customer() {
               const url = baseUrl + 'api/customers/' + id;
               fetch(url, {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: 'Bearer ' + localStorage.getItem('access'),
+                },
               })
                 .then((response) => {
                   if (!response.ok) {
                     throw new Error('Something went wrong');
+                  } else if (response.status === 401) {
+                    setLoggedIn(false);
+                    navigate('/login', {
+                      state: {
+                        previousUrl: location.pathname,
+                      },
+                    });
                   }
                   setError(undefined);
                   navigate('/customers');
